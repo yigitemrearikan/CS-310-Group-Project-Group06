@@ -1,0 +1,131 @@
+import 'package:flutter/material.dart';
+
+class SignUpScreen extends StatefulWidget {
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  bool receiveOffers = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Sign Up"),
+        leading: IconButton(
+          icon: Text("⬅"),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/');
+          },
+        ),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: "Name"),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Enter name";
+                  }
+                  return null;
+                },
+              ),
+
+              TextFormField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: "Email"),
+                validator: (value) {
+                  if (value == null) {
+                    return "Invalid email";
+                  }
+
+                  if (!value.contains("@") || !value.contains(".")) {
+                    return "Invalid email";
+                  }
+
+                  return null;
+                },
+              ),
+
+              TextFormField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: "Password"),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.length < 6) {
+                    return "Min 6 characters";
+                  }
+                  return null;
+                },
+              ),
+
+              TextFormField(
+                controller: confirmPasswordController,
+                decoration: InputDecoration(labelText: "Confirm Password"),
+                obscureText: true,
+                validator: (value) {
+                  if (value != passwordController.text) {
+                    return "Passwords do not match";
+                  }
+                  return null;
+                },
+              ),
+
+              CheckboxListTile(
+                value: receiveOffers,
+                onChanged: (val) {
+                  setState(() {
+                    receiveOffers = val!;
+                  });
+                },
+                title: Text("Receive discounts & updates"),
+              ),
+
+              SizedBox(height: 20),
+
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: Text("Success"),
+                        content: Text("Account created successfully!"),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/weather',
+                              );
+                            },
+                            child: Text("OK"),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+                child: Text("Sign Up"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
