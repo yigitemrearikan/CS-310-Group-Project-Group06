@@ -1,0 +1,153 @@
+import 'package:flutter/material.dart';
+
+class WeatherScreen extends StatefulWidget {
+  @override
+  State<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends State<WeatherScreen> {
+  final locationController = TextEditingController();
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Weather"),
+        actions: [
+          IconButton(
+            icon: Text("🏠︎"),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/home');
+            },
+          ),
+        ],
+      ),
+
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Select Location",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            SizedBox(height: 8),
+
+            TextField(
+              controller: locationController,
+              decoration: InputDecoration(
+                hintText: "Enter city or zip code",
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            SizedBox(height: 5),
+
+            Text(
+              "Automatically defaults to current location",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+
+            SizedBox(height: 20),
+
+            Text(
+              "Current Weather",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            Text(
+              "Details for today",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+
+            SizedBox(height: 10),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _infoCard("Temperature", "20°C"),
+                _infoCard("Wind Speed", "12 km/h"),
+                _infoCard("Humidity", "60%"),
+                _infoCard("Rain", "10%"),
+              ],
+            ),
+
+            SizedBox(height: 20),
+
+            Text(
+              "Hourly Breakdown",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            SizedBox(height: 10),
+            Expanded(
+              child: ListView(
+                children: [
+                  _hourCard("☀️", "10:00", "20°C", "5 km/h", "10%"),
+                  _hourCard("☀️", "11:00", "22°C", "6 km/h", "5%"),
+                  _hourCard("☀️", "12:00", "23°C", "4 km/h", "0%"),
+                  _hourCard("☀️", "13:00", "22°C", "5 km/h", "5%"),
+                ],
+              ),
+            ),
+            Center(
+              child: TextButton.icon(
+                onPressed: () {},
+                label: Text("Refresh", style: TextStyle(fontSize: 25)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoCard(String title, String value) {
+    return Expanded(
+      child: Card(
+        child: Padding(
+          padding: EdgeInsets.all(10),
+          child: Column(
+            children: [
+              Text(title, style: TextStyle(fontSize: 12)),
+              SizedBox(height: 5),
+              Text(
+                value,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _hourCard(
+    String icon,
+    String time,
+    String temp,
+    String wind,
+    String rain,
+  ) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Text(icon, style: TextStyle(fontSize: 22)),
+            SizedBox(width: 10),
+            Text(time, style: TextStyle(fontWeight: FontWeight.bold)),
+            Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [Text(temp), Text("Wind: $wind"), Text("Rain: $rain")],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
