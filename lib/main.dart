@@ -3,7 +3,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart'; 
 import 'screens/welcome_screen.dart';
 import 'screens/main_navigation.dart';
-
+import 'screens/add_address_screen.dart';
 void main() {
   runApp(
     DevicePreview(
@@ -28,6 +28,7 @@ class WearToWeatherApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
+        '/add-address': (context) => const AddAddressScreen(),
         '/': (context) => const WelcomeScreen(),
         '/home': (context) => const MainNavigation(),
       },

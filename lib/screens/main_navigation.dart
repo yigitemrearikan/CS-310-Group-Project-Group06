@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'add_address_screen.dart';
 import 'home_screen.dart';
+import 'saved_outfits_screen.dart';
 import 'wardrobe_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -12,13 +14,12 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-
   final List<Widget> _pages = [
     const HomeScreen(),
-    const Center(child: Text("Weather Screen")), // Placeholder
+    const AddAddressScreen(),
     const WardrobeScreen(),
-    const Center(child: Text("Saved Outfits")), // Placeholder
-    const Center(child: Text("Profile")), // Placeholder
+    const SavedOutfitsScreen(),
+    const Center(child: Text("Profile")),
   ];
 
   @override
@@ -29,6 +30,7 @@ class _MainNavigationState extends State<MainNavigation> {
         currentIndex: _currentIndex,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
@@ -36,7 +38,7 @@ class _MainNavigationState extends State<MainNavigation> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Weather'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Address'),
           BottomNavigationBarItem(icon: Icon(Icons.checkroom), label: 'Wardrobe'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Saved'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
