@@ -23,7 +23,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         leading: IconButton(
           icon: Text("⬅"),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/welcome');
+            Navigator.pushReplacementNamed(context, '/');
           },
         ),
       ),
