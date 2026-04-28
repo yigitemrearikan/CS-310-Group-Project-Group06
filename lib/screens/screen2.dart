@@ -1,29 +1,13 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Screen2 extends StatefulWidget {
+  const Screen2({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const SignInPage(),
-    );
-  }
+  State<Screen2> createState() => _Screen2State();
 }
 
-class SignInPage extends StatefulWidget {
-  const SignInPage({super.key});
-
-  @override
-  State<SignInPage> createState() => _SignInPageState();
-}
-
-class _SignInPageState extends State<SignInPage> {
+class _Screen2State extends State<Screen2> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
@@ -40,23 +24,7 @@ class _SignInPageState extends State<SignInPage> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Sign In successful!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -119,7 +87,9 @@ class _SignInPageState extends State<SignInPage> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                         icon: const Icon(Icons.arrow_back, color: Colors.black),
                       ),
                       const Expanded(
@@ -280,12 +250,6 @@ class _SignInPageState extends State<SignInPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const GoogleLoginPage(),
-                            ),
-                          );
                         },
                         child: _socialCircle(
                           child: const Text(
@@ -301,12 +265,6 @@ class _SignInPageState extends State<SignInPage> {
                       const SizedBox(width: 30),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const FacebookLoginPage(),
-                            ),
-                          );
                         },
                         child: _socialCircle(
                           backgroundColor: const Color(0xFF3B5998),
@@ -363,12 +321,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SignUpPage(),
-                              ),
-                            );
+                            Navigator.pushNamed(context, '/sign-up');
                           },
                           child: const Text(
                             'Sign Up',
@@ -386,63 +339,6 @@ class _SignInPageState extends State<SignInPage> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class SignUpPage extends StatelessWidget {
-  const SignUpPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign Up'),
-      ),
-      body: const Center(
-        child: Text(
-          'Sign Up Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class GoogleLoginPage extends StatelessWidget {
-  const GoogleLoginPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Google Login'),
-      ),
-      body: const Center(
-        child: Text(
-          'Google Login Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class FacebookLoginPage extends StatelessWidget {
-  const FacebookLoginPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Facebook Login'),
-      ),
-      body: const Center(
-        child: Text(
-          'Facebook Login Page',
-          style: TextStyle(fontSize: 24),
         ),
       ),
     );

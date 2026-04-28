@@ -27,20 +27,24 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, '/screen2');
+                },
                 child: const Text('Sign In'),
               ),
               const SizedBox(height: 10),
               const Text('OR', textAlign: TextAlign.center, style: AppStyles.bodyStyle),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, '/sign-up');
+                },
                 child: const Text('Sign Up'),
               ),
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/home'); 
+                  Navigator.pushReplacementNamed(context, '/main-nav'); 
                 },
                 child: const Text('Continue as a guest'),
               ),

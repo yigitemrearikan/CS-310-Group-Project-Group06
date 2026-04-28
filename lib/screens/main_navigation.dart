@@ -3,6 +3,7 @@ import 'add_address_screen.dart';
 import 'home_screen.dart';
 import 'saved_outfits_screen.dart';
 import 'wardrobe_screen.dart';
+import 'screen6.dart'; 
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -15,11 +16,11 @@ class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeScreen(),
+    HomeScreen(),
     const AddAddressScreen(),
-    const WardrobeScreen(),
-    const SavedOutfitsScreen(),
-    const Center(child: Text("Profile")),
+    WardrobeScreen(),
+    SavedOutfitsScreen(),
+    const ProfilePage(),
   ];
 
   @override

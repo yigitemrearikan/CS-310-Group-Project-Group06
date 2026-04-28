@@ -1,21 +1,5 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ProfilePage(),
-    );
-  }
-}
-
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -31,7 +15,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String selectedStyle = 'Casual';
   String selectedTemp = 'Moderate';
-  int _currentIndex = 4;
+  int _currentIndex = 4; 
 
   @override
   void dispose() {
@@ -92,33 +76,28 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _goToPage(Widget page, {bool replace = false}) {
-    if (replace) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => page),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => page),
-      );
-    }
-  }
-
   void _handleBottomNav(int index) {
+    if (_currentIndex == index) return;
+
     setState(() {
       _currentIndex = index;
     });
 
-    if (index == 0) {
-      _goToPage(const HomePage(), replace: true);
-    } else if (index == 1) {
-      _goToPage(const WeatherPage(), replace: true);
-    } else if (index == 2) {
-      _goToPage(const WardrobePage(), replace: true);
-    } else if (index == 3) {
-      _goToPage(const SavedOutfitsPage(), replace: true);
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/weather');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/wardrobe');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/saved-outfits');
+        break;
+      case 4:
+        break;
     }
   }
 
@@ -131,18 +110,16 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context); 
             },
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(
+              Navigator.pop(context); 
+              Navigator.pushNamedAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SignInPage(),
-                ),
+                '/', 
                 (route) => false,
               );
             },
@@ -165,26 +142,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.black54,
-        onTap: _handleBottomNav,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Weather'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.checkroom),
-            label: 'Wardrobe',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Saved Outfits',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -203,7 +160,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.pop(context);
+                          if (Navigator.canPop(context)) {
+                             Navigator.pop(context);
+                          } else {
+                             Navigator.pushReplacementNamed(context, '/home');
+                          }
                         },
                         child:
                             const Icon(Icons.arrow_back_ios_new, size: 20),
@@ -220,7 +181,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          _goToPage(const SettingsPage());
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SettingsPage()),
+                          );
                         },
                         child: Icon(
                           Icons.settings,
@@ -231,7 +196,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () {
-                          _goToPage(const NotificationsPage());
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const NotificationsPage()),
+                          );
                         },
                         child: const Icon(
                           Icons.notifications,
@@ -421,23 +390,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-class SignInPage extends StatelessWidget {
-  const SignInPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Sign In')),
-      body: const Center(
-        child: Text(
-          'Sign In Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -446,10 +398,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: const Center(
-        child: Text(
-          'Settings Page',
-          style: TextStyle(fontSize: 24),
-        ),
+        child: Text('Settings Page', style: TextStyle(fontSize: 24)),
       ),
     );
   }
@@ -463,78 +412,7 @@ class NotificationsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
       body: const Center(
-        child: Text(
-          'Notifications Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(
-        child: Text(
-          'Home Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class WeatherPage extends StatelessWidget {
-  const WeatherPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Weather')),
-      body: const Center(
-        child: Text(
-          'Weather Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class WardrobePage extends StatelessWidget {
-  const WardrobePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Wardrobe')),
-      body: const Center(
-        child: Text(
-          'Wardrobe Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class SavedOutfitsPage extends StatelessWidget {
-  const SavedOutfitsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Saved Outfits')),
-      body: const Center(
-        child: Text(
-          'Saved Outfits Page',
-          style: TextStyle(fontSize: 24),
-        ),
+        child: Text('Notifications Page', style: TextStyle(fontSize: 24)),
       ),
     );
   }
