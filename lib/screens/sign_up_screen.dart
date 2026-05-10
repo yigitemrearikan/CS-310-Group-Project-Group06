@@ -1,126 +1,200 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/app_styles.dart';
 
 class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-  bool receiveOffers = false;
+  Future<void> _handleSignUp() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showError('Please fill in all fields.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'name': name,
+        'email': email,
+        'stylePreference': '',
+        'temperatureSensitivity': '',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'An error occurred. Please try again.';
+      if (e.code == 'weak-password') {
+        errorMessage = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'The account already exists for that email.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'The email address is not valid.';
+      }
+      _showError(errorMessage);
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sign Up"),
-        leading: IconButton(
-          icon: Text("⬅"),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/');
-          },
-        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: theme.iconTheme,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: AppStyles.defaultPadding,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: "Name"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Enter name";
-                  }
-                  return null;
-                },
+              const SizedBox(height: 20),
+              Text(
+                'Create Account',
+                style: AppStyles.titleStyle.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 32,
+                ),
+                textAlign: TextAlign.center,
               ),
-
-              TextFormField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: "Email"),
-                validator: (value) {
-                  if (value == null) {
-                    return "Invalid email";
-                  }
-
-                  if (!value.contains("@") || !value.contains(".")) {
-                    return "Invalid email";
-                  }
-
-                  return null;
-                },
+              const SizedBox(height: 40),
+              TextField(
+                controller: _nameController,
+                style: TextStyle(color: theme.colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  prefixIcon: Icon(Icons.person_outline, color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.2)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: theme.colorScheme.onSurface),
+                  ),
+                ),
               ),
-
-              TextFormField(
-                controller: passwordController,
-                decoration: InputDecoration(labelText: "Password"),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: theme.colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  prefixIcon: Icon(Icons.email_outlined, color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.2)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: theme.colorScheme.onSurface),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.length < 6) {
-                    return "Min 6 characters";
-                  }
-                  return null;
-                },
+                style: TextStyle(color: theme.colorScheme.onSurface),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.2)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: theme.colorScheme.onSurface),
+                  ),
+                ),
               ),
-
-              TextFormField(
-                controller: confirmPasswordController,
-                decoration: InputDecoration(labelText: "Confirm Password"),
-                obscureText: true,
-                validator: (value) {
-                  if (value != passwordController.text) {
-                    return "Passwords do not match";
-                  }
-                  return null;
-                },
-              ),
-
-              CheckboxListTile(
-                value: receiveOffers,
-                onChanged: (val) {
-                  setState(() {
-                    receiveOffers = val!;
-                  });
-                },
-                title: Text("Receive discounts & updates"),
-              ),
-
-              SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text("Success"),
-                        content: Text("Account created successfully!"),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.pushReplacementNamed(
-                                context,
-                                '/weather',
-                              );
-                            },
-                            child: Text("OK"),
+              const SizedBox(height: 40),
+              SizedBox(
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _handleSignUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: isDark ? Colors.black : Colors.white,
+                            strokeWidth: 2,
                           ),
-                        ],
-                      ),
-                    );
-                  }
-                },
-                child: Text("Sign Up"),
+                        )
+                      : const Text(
+                          'Sign Up',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                ),
               ),
             ],
           ),

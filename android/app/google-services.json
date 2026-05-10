@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056635205913",
+    "project_id": "weartoweather",
+    "storage_bucket": "weartoweather.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056635205913:android:7ce01f47992b8018412d88",
+        "android_client_info": {
+          "package_name": "com.example.wear2weather"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhwWrBagWsqGtXL5N4z1EYv5ZClxHPbz0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wear2weather/providers/auth_provider.dart';
 
 class Screen2 extends StatefulWidget {
   const Screen2({super.key});
@@ -287,7 +289,25 @@ class _Screen2State extends State<Screen2> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _submitForm,
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          final authProvider =
+                            Provider.of<AuthProvider>(context, listen: false);
+
+                          final error = await authProvider.login(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text.trim(),
+                          );
+
+                          if (error == null) {
+                            Navigator.pushReplacementNamed(context, '/main-nav');
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error)),
+                            );
+                          }
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2F39E6),
                         shape: RoundedRectangleBorder(
