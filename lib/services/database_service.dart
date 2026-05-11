@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 
 class DatabaseService {
   final String _databaseURL = 'https://weartoweather-default-rtdb.europe-west1.firebasedatabase.app/';
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   DatabaseReference _dbRef() {
     return FirebaseDatabase.instanceFor(
@@ -25,7 +24,7 @@ class DatabaseService {
       await ref.set({
         'userId': userId,
         'email': email ?? '',
-        'name': name ?? '',
+        'name': name ?? 'Guest',
         'stylePreference': 'Casual',
         'temperatureSensitivity': 'Moderate',
         'createdAt': ServerValue.timestamp,

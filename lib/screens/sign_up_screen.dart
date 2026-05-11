@@ -57,7 +57,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'createdAt': ServerValue.timestamp,
         });
 
-        if (mounted) setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+          Navigator.of(context).pushNamedAndRemoveUntil('/main-nav', (route) => false);
+        }
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) setState(() => _isLoading = false);

@@ -82,6 +82,7 @@ class WearToWeatherApp extends StatelessWidget {
         },
       ),
       routes: {
+        '/welcome': (context) => const WelcomeScreen(),
         '/screen2': (context) => Screen2(),
         '/sign-up': (context) => const SignUpScreen(),
         '/main-nav': (context) => const MainNavigation(),
@@ -89,7 +90,7 @@ class WearToWeatherApp extends StatelessWidget {
         '/home': (context) => HomeScreen(),
         '/weather': (context) => WeatherScreen(),
         '/wardrobe': (context) => const WardrobeScreen(),
-        '/saved-outfits': (context) => SavedOutfitsScreen(),
+        '/saved-outfits': (context) => const SavedOutfitsScreen(),
         '/profile': (context) => const ProfilePage(),
         '/settings': (context) => const SettingsScreen(),
         '/notifications': (context) => const NotificationsScreen(),

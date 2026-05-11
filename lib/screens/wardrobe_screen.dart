@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import '../utils/app_styles.dart';
+import '../services/database_service.dart';
 
 class ClothingItem {
   final String id;
@@ -26,33 +25,14 @@ class WardrobeScreen extends StatefulWidget {
 }
 
 class _WardrobeScreenState extends State<WardrobeScreen> {
+  final DatabaseService _dbService = DatabaseService();
   String selectedCategory = 'All';
   final List<String> categories = ['All', 'Dresses', 'Coats', 'T-shirts', 'Pants'];
-  final String _databaseURL = 'https://weartoweather-default-rtdb.europe-west1.firebasedatabase.app/';
-
-  DatabaseReference _getRef() {
-    final user = FirebaseAuth.instance.currentUser;
-    return FirebaseDatabase.instanceFor(
-      app: Firebase.app(),
-      databaseURL: _databaseURL,
-    ).ref("users/${user?.uid}/wardrobe");
-  }
-
-  Future<void> _addClothing(String category, String name) async {
-    final ref = _getRef().push();
-    await ref.set({
-      'category': category,
-      'name': name,
-      'addedAt': ServerValue.timestamp,
-    });
-  }
-
-  Future<void> _removeItem(String id) async {
-    await _getRef().child(id).remove();
-  }
 
   void _showAddItemDialog() {
     final TextEditingController nameController = TextEditingController();
+    final user = FirebaseAuth.instance.currentUser;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -65,8 +45,8 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                _addClothing(selectedCategory, nameController.text.trim());
+              if (nameController.text.isNotEmpty && user != null) {
+                _dbService.addWardrobeItem(user.uid, selectedCategory, nameController.text.trim());
                 Navigator.pop(context);
               }
             },
@@ -91,6 +71,40 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null || user.isAnonymous) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Wardrobe', style: AppStyles.titleStyle.copyWith(color: theme.colorScheme.onSurface)),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_outline, size: 64, color: theme.colorScheme.onSurface.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              const Text(
+                "Please sign up to manage your wardrobe!",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/sign-up'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.white : Colors.black,
+                  foregroundColor: isDark ? Colors.black : Colors.white,
+                ),
+                child: const Text("Sign Up Now"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -129,7 +143,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           ),
           Expanded(
             child: StreamBuilder(
-              stream: _getRef().onValue,
+              stream: _dbService.getWardrobeStream(user.uid),
               builder: (context, snapshot) {
                 if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
                 if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
@@ -175,7 +189,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                           Text(item.name, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                            onPressed: () => _removeItem(item.id),
+                            onPressed: () => _dbService.deleteWardrobeItem(user.uid, item.id),
                           ),
                         ],
                       ),
