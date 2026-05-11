@@ -1,16 +1,12 @@
 import 'package:flutter/foundation.dart';
-
-import '../models/address_model.dart';
-import '../models/saved_outfit_model.dart';
-import '../models/user_preference_model.dart';
-import '../models/wardrobe_item_model.dart';
-import '../services/firestore_service.dart';
+import '../services/database_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class DatabaseProvider extends ChangeNotifier {
-  final FirestoreService _firestoreService;
+  final DatabaseService _dbService;
 
-  DatabaseProvider({FirestoreService? firestoreService})
-      : _firestoreService = firestoreService ?? FirestoreService();
+  DatabaseProvider({DatabaseService? dbService})
+      : _dbService = dbService ?? DatabaseService();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -32,106 +28,40 @@ class DatabaseProvider extends ChangeNotifier {
     _setError(null);
   }
 
-  // -----------------------------
-  // Wardrobe Items
-  // -----------------------------
-
-  Stream<List<WardrobeItem>> getWardrobeItems(String userId) {
-    return _firestoreService.getWardrobeItems(userId);
+  Stream<DatabaseEvent> getWardrobeItems(String userId) {
+    return _dbService.getWardrobeStream(userId);
   }
 
-  Future<void> addWardrobeItem(
-    String userId,
-    WardrobeItem item,
-  ) async {
-    await _run(() => _firestoreService.addWardrobeItem(userId, item));
+  Future<void> addWardrobeItem(String userId, String category, String name) async {
+    await _run(() => _dbService.addWardrobeItem(userId, category, name));
   }
 
-  Future<void> updateWardrobeItem(
-    String userId,
-    WardrobeItem item,
-  ) async {
-    await _run(() => _firestoreService.updateWardrobeItem(userId, item));
+  Future<void> deleteWardrobeItem(String userId, String itemId) async {
+    await _run(() => _dbService.deleteWardrobeItem(userId, itemId));
   }
 
-  Future<void> deleteWardrobeItem(
-    String userId,
-    String itemId,
-  ) async {
-    await _run(() => _firestoreService.deleteWardrobeItem(userId, itemId));
+  Stream<DatabaseEvent> getSavedOutfits(String userId) {
+    return _dbService.getSavedOutfitsStream(userId);
   }
 
-  // -----------------------------
-  // Saved Outfits
-  // -----------------------------
-
-  Stream<List<SavedOutfit>> getSavedOutfits(String userId) {
-    return _firestoreService.getSavedOutfits(userId);
+  Future<void> addSavedOutfit(String userId, Map<String, dynamic> outfitData) async {
+    await _run(() => _dbService.addSavedOutfit(userId, outfitData));
   }
 
-  Future<void> addSavedOutfit(
-    String userId,
-    SavedOutfit outfit,
-  ) async {
-    await _run(() => _firestoreService.addSavedOutfit(userId, outfit));
+  Future<void> deleteSavedOutfit(String userId, String outfitId) async {
+    await _run(() => _dbService.deleteSavedOutfit(userId, outfitId));
   }
 
-  Future<void> updateSavedOutfit(
-    String userId,
-    SavedOutfit outfit,
-  ) async {
-    await _run(() => _firestoreService.updateSavedOutfit(userId, outfit));
+  Stream<DatabaseEvent> getUserPreferences(String userId) {
+    return _dbService.getUserPreferencesStream(userId);
   }
 
-  Future<void> deleteSavedOutfit(
-    String userId,
-    String outfitId,
-  ) async {
-    await _run(() => _firestoreService.deleteSavedOutfit(userId, outfitId));
+  Future<void> setUserPreferences(String userId, Map<String, dynamic> preferences) async {
+    await _run(() => _dbService.setUserPreferences(userId, preferences));
   }
 
-  // -----------------------------
-  // Addresses
-  // -----------------------------
-
-  Stream<List<AddressModel>> getAddresses(String userId) {
-    return _firestoreService.getAddresses(userId);
-  }
-
-  Future<void> addAddress(
-    String userId,
-    AddressModel address,
-  ) async {
-    await _run(() => _firestoreService.addAddress(userId, address));
-  }
-
-  Future<void> updateAddress(
-    String userId,
-    AddressModel address,
-  ) async {
-    await _run(() => _firestoreService.updateAddress(userId, address));
-  }
-
-  Future<void> deleteAddress(
-    String userId,
-    String addressId,
-  ) async {
-    await _run(() => _firestoreService.deleteAddress(userId, addressId));
-  }
-
-  // -----------------------------
-  // User Preferences
-  // -----------------------------
-
-  Stream<UserPreference?> getUserPreferences(String userId) {
-    return _firestoreService.getUserPreferences(userId);
-  }
-
-  Future<void> setUserPreferences(
-    String userId,
-    UserPreference preferences,
-  ) async {
-    await _run(() => _firestoreService.setUserPreferences(userId, preferences));
+  Future<void> updateProfile(String userId, String name, String style, String temp) async {
+    await _run(() => _dbService.updateProfile(userId, name, style, temp));
   }
 
   Future<void> _run(Future<void> Function() operation) async {

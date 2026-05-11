@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../utils/app_styles.dart';
 
 class ClothingItem {
+  final String id;
   final String name;
   final String iconPlaceholder;
-  final String category; 
+  final String category;
 
   ClothingItem({
-    required this.name, 
-    required this.iconPlaceholder, 
-    required this.category
+    required this.id,
+    required this.name,
+    required this.iconPlaceholder,
+    required this.category,
   });
 }
 
@@ -21,39 +26,55 @@ class WardrobeScreen extends StatefulWidget {
 }
 
 class _WardrobeScreenState extends State<WardrobeScreen> {
-  String selectedCategory = 'All'; 
+  String selectedCategory = 'All';
   final List<String> categories = ['All', 'Dresses', 'Coats', 'T-shirts', 'Pants'];
+  final String _databaseURL = 'https://weartoweather-default-rtdb.europe-west1.firebasedatabase.app/';
 
-  List<ClothingItem> allItems = [
-    ClothingItem(name: 'Coat 1', iconPlaceholder: '🧥', category: 'Coats'),
-    ClothingItem(name: 'T-shirt 1', iconPlaceholder: '👕', category: 'T-shirts'),
-    ClothingItem(name: 'Shoes 1', iconPlaceholder: '👟', category: 'Pants'),
-    ClothingItem(name: 'Coat 2', iconPlaceholder: '🧥', category: 'Coats'),
-    ClothingItem(name: 'Summer Dress', iconPlaceholder: '👗', category: 'Dresses'),
-  ];
-
-  List<ClothingItem> get filteredItems {
-    if (selectedCategory == 'All') {
-      return allItems;
-    }
-    return allItems.where((item) => item.category == selectedCategory).toList();
+  DatabaseReference _getRef() {
+    final user = FirebaseAuth.instance.currentUser;
+    return FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL: _databaseURL,
+    ).ref("users/${user?.uid}/wardrobe");
   }
 
-  void _removeItem(ClothingItem item) {
-    setState(() {
-      allItems.remove(item);
+  Future<void> _addClothing(String category, String name) async {
+    final ref = _getRef().push();
+    await ref.set({
+      'category': category,
+      'name': name,
+      'addedAt': ServerValue.timestamp,
     });
   }
 
-  void _addItem() {
-    String categoryToAdd = selectedCategory == 'All' ? 'Coats' : selectedCategory;
-    setState(() {
-      allItems.add(ClothingItem(
-        name: '$categoryToAdd ${allItems.length + 1}',
-        iconPlaceholder: _getIconForCategory(categoryToAdd),
-        category: categoryToAdd,
-      ));
-    });
+  Future<void> _removeItem(String id) async {
+    await _getRef().child(id).remove();
+  }
+
+  void _showAddItemDialog() {
+    final TextEditingController nameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add to $selectedCategory'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(hintText: "Item Name (e.g. Blue Coat)"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                _addClothing(selectedCategory, nameController.text.trim());
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
   }
 
   String _getIconForCategory(String category) {
@@ -68,10 +89,13 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wardrobe', style: AppStyles.titleStyle),
-        backgroundColor: AppStyles.backgroundColor,
+        title: Text('Wardrobe', style: AppStyles.titleStyle.copyWith(color: theme.colorScheme.onSurface)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
@@ -92,13 +116,11 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     label: Text(categories[index]),
                     selected: isSelected,
                     onSelected: (selected) {
-                      setState(() {
-                        selectedCategory = categories[index];
-                      });
+                      setState(() => selectedCategory = categories[index]);
                     },
-                    selectedColor: Colors.black,
+                    selectedColor: isDark ? Colors.white : Colors.black,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black,
+                      color: isSelected ? (isDark ? Colors.black : Colors.white) : theme.colorScheme.onSurface,
                     ),
                   ),
                 );
@@ -106,9 +128,31 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             ),
           ),
           Expanded(
-            child: filteredItems.isEmpty 
-              ? const Center(child: Text('No items to show.'))
-              : GridView.builder(
+            child: StreamBuilder(
+              stream: _getRef().onValue,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+
+                List<ClothingItem> items = [];
+                if (snapshot.data?.snapshot.value != null) {
+                  final data = Map<dynamic, dynamic>.from(snapshot.data!.snapshot.value as Map);
+                  data.forEach((key, value) {
+                    final itemData = Map<String, dynamic>.from(value);
+                    if (selectedCategory == 'All' || itemData['category'] == selectedCategory) {
+                      items.add(ClothingItem(
+                        id: key,
+                        name: itemData['name'],
+                        category: itemData['category'],
+                        iconPlaceholder: _getIconForCategory(itemData['category']),
+                      ));
+                    }
+                  });
+                }
+
+                if (items.isEmpty) return const Center(child: Text('No items in this category.'));
+
+                return GridView.builder(
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -116,10 +160,11 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     mainAxisSpacing: 16,
                     childAspectRatio: 0.85,
                   ),
-                  itemCount: filteredItems.length,
+                  itemCount: items.length,
                   itemBuilder: (context, index) {
-                    final item = filteredItems[index];
+                    final item = items[index];
                     return Card(
+                      color: theme.colorScheme.surface,
                       elevation: 2,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       child: Column(
@@ -127,27 +172,29 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                         children: [
                           Text(item.iconPlaceholder, style: const TextStyle(fontSize: 50)),
                           const SizedBox(height: 10),
-                          Text(item.name, style: AppStyles.bodyStyle),
+                          Text(item.name, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.red),
-                            onPressed: () => _removeItem(item),
+                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                            onPressed: () => _removeItem(item.id),
                           ),
                         ],
                       ),
                     );
                   },
-                ),
+                );
+              },
+            ),
           ),
         ],
       ),
-      floatingActionButton: selectedCategory == 'All' 
-        ? null 
-        : FloatingActionButton.extended(
-            onPressed: _addItem, 
-            backgroundColor: Colors.black,
-            label: const Text('Add Item', style: TextStyle(color: Colors.white)),
-            icon: const Icon(Icons.add, color: Colors.white),
-          ),
+      floatingActionButton: selectedCategory == 'All'
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _showAddItemDialog,
+              backgroundColor: isDark ? Colors.white : Colors.black,
+              label: Text('Add to $selectedCategory', style: TextStyle(color: isDark ? Colors.black : Colors.white)),
+              icon: Icon(Icons.add, color: isDark ? Colors.black : Colors.white),
+            ),
     );
   }
 }

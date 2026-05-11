@@ -17,6 +17,7 @@ import 'package:wear2weather/screens/weather_screen.dart';
 import 'package:wear2weather/screens/wardrobe_screen.dart';
 import 'package:wear2weather/screens/saved_outfits_screen.dart';
 import 'package:wear2weather/screens/screen2.dart';
+import 'package:wear2weather/screens/NotificationScreen.dart';
 import 'package:wear2weather/screens/screen6.dart';
 
 void main() async {
@@ -28,12 +29,8 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => SettingsProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: DevicePreview(
         enabled: !kReleaseMode,
@@ -51,40 +48,51 @@ class WearToWeatherApp extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
 
     return MaterialApp(
-      home: StreamBuilder<auth.User?>( 
-        stream: auth.FirebaseAuth.instance.authStateChanges(), 
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
+      debugShowCheckedModeBanner: false,
+      title: 'WearToWeather',
+      theme: settings.isDarkMode 
+      ? ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: const Color(0xFF121212),
+          colorScheme: const ColorScheme.dark(
+            surface: Color(0xFF1E1E1E),
+            onSurface: Colors.white,
+          ),
+        ) 
+      : ThemeData.light().copyWith(
+          scaffoldBackgroundColor: Colors.white,
+          colorScheme: const ColorScheme.light(
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+        ),
+      home: StreamBuilder<auth.User?>(
+        stream: auth.FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
-          
-          if (snapshot.hasData) {
+          if (snapshot.hasData && snapshot.data != null) {
             return const MainNavigation();
           }
-          
           return const WelcomeScreen();
         },
-      ),         
-      locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
-      debugShowCheckedModeBanner: false,
-      title: 'WearToWeather',
-      theme: settings.isDarkMode
-          ? ThemeData.dark()
-          : ThemeData.light(),
+      ),
       routes: {
         '/screen2': (context) => Screen2(),
-        '/sign-up': (context) => SignUpScreen(),
+        '/sign-up': (context) => const SignUpScreen(),
         '/main-nav': (context) => const MainNavigation(),
         '/add-address': (context) => const AddAddressScreen(),
         '/home': (context) => HomeScreen(),
         '/weather': (context) => WeatherScreen(),
-        '/wardrobe': (context) => WardrobeScreen(),
+        '/wardrobe': (context) => const WardrobeScreen(),
         '/saved-outfits': (context) => SavedOutfitsScreen(),
         '/profile': (context) => const ProfilePage(),
         '/settings': (context) => const SettingsScreen(),
+        '/notifications': (context) => const NotificationsScreen(),
       },
     );
   }

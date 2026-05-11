@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../utils/app_styles.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -12,7 +14,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  
+
   String _selectedStyle = 'Casual';
   String _selectedTemp = 'Moderate';
 
@@ -22,10 +24,32 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _loadUserData();
+  }
+
+Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       _emailController.text = user.email ?? '';
-      _nameController.text = user.displayName ?? '';
+      try {
+        final db = FirebaseDatabase.instanceFor(
+            app: Firebase.app(), 
+            databaseURL: 'https://weartoweather-default-rtdb.europe-west1.firebasedatabase.app/'
+        );
+        
+        final ref = db.ref("users/${user.uid}");
+        final snapshot = await ref.get();
+        if (snapshot.exists && mounted) {
+          final data = Map<String, dynamic>.from(snapshot.value as Map);
+          setState(() {
+            _nameController.text = data['name'] ?? '';
+            _selectedStyle = data['stylePreference'] ?? 'Casual';
+            _selectedTemp = data['temperatureSensitivity'] ?? 'Moderate';
+          });
+        }
+      } catch (e) {
+        debugPrint("Okuma Hatası: $e");
+      }
     }
   }
 
@@ -44,14 +68,44 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        _showMessage(e.toString(), Colors.redAccent);
       }
     }
+  }
+
+  Future<void> _saveChanges() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final db = FirebaseDatabase.instanceFor(
+          app: Firebase.app(), 
+          databaseURL: 'https://weartoweather-default-rtdb.europe-west1.firebasedatabase.app/'
+      );
+      
+      DatabaseReference ref = db.ref("users/${user.uid}");
+      
+      await ref.update({
+        'name': _nameController.text.trim(),
+        'stylePreference': _selectedStyle,
+        'temperatureSensitivity': _selectedTemp,
+        'email': user.email,
+      });
+
+      if (mounted) {
+        _showMessage('Profile updated successfully!', Colors.green);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showMessage('Failed to update: $e', Colors.redAccent);
+      }
+    }
+  }
+
+  void _showMessage(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
   }
 
   @override
@@ -65,8 +119,18 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.settings), 
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings'); 
+            }
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications_none), 
+            onPressed: () {
+              Navigator.pushNamed(context, '/notifications'); 
+            }
+          ),
         ],
         iconTheme: theme.iconTheme,
       ),
@@ -111,9 +175,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text('Your primary email for notifications', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.5))),
-            
             const SizedBox(height: 20),
             Text('Name', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -131,9 +192,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text('Your full name', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.5))),
-
             const SizedBox(height: 30),
             Text('Style Preference', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
@@ -150,17 +208,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                     selectedColor: isDark ? Colors.white : Colors.black,
                     labelStyle: TextStyle(
-                      color: isSelected 
-                          ? (isDark ? Colors.black : Colors.white) 
-                          : theme.colorScheme.onSurface,
+                      color: isSelected ? (isDark ? Colors.black : Colors.white) : theme.colorScheme.onSurface,
                     ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 4),
-            Text('Choose your preferred style for recommendations', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.5))),
-
             const SizedBox(height: 30),
             Text('Temperature Sensitivity', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
@@ -177,17 +230,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                     selectedColor: isDark ? Colors.white : Colors.black,
                     labelStyle: TextStyle(
-                      color: isSelected 
-                          ? (isDark ? Colors.black : Colors.white) 
-                          : theme.colorScheme.onSurface,
+                      color: isSelected ? (isDark ? Colors.black : Colors.white) : theme.colorScheme.onSurface,
                     ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 4),
-            Text('Select your temperature preferences', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.5))),
-
             const SizedBox(height: 40),
             Row(
               children: [
@@ -205,7 +253,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _saveChanges,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDark ? Colors.white : Colors.black,
                       foregroundColor: isDark ? Colors.black : Colors.white,
@@ -216,7 +264,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

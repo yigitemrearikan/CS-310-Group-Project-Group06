@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../utils/app_styles.dart';
 
 class OutfitItem {
@@ -39,27 +38,22 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
 
   void _deleteSelected() {
     final selectedCount = _outfits.where((item) => item.isSelected).length;
-
     if (selectedCount == 0) {
       _showDialog('No Selection', 'Please select at least one outfit.');
       return;
     }
-
     setState(() {
       _outfits.removeWhere((item) => item.isSelected);
     });
-
     _showDialog('Deleted', '$selectedCount selected outfit(s) removed successfully.');
   }
 
   void _reuseOutfits() {
     final selectedCount = _outfits.where((item) => item.isSelected).length;
-
     if (selectedCount == 0) {
       _showDialog('No Selection', 'Please select at least one outfit.');
       return;
     }
-
     _showDialog('Reuse Outfits', '$selectedCount selected outfit(s) are ready to reuse.');
   }
 
@@ -83,32 +77,35 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final double width = MediaQuery.of(context).size.width;
     final int crossAxisCount = width > 900 ? 4 : width > 650 ? 3 : 2;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saved Outfits', style: AppStyles.titleStyle),
-        backgroundColor: AppStyles.backgroundColor,
+        title: Text('Saved Outfits', style: AppStyles.titleStyle.copyWith(color: theme.colorScheme.onSurface)),
+        backgroundColor: Colors.transparent,
         centerTitle: true,
         elevation: 0,
+        iconTheme: theme.iconTheme,
       ),
       body: Padding(
         padding: AppStyles.defaultPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Saved outfit combinations',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             ),
             const SizedBox(height: 14),
             Expanded(
               child: _outfits.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         'No saved outfits left.',
-                        style: AppStyles.bodyStyle,
+                        style: AppStyles.bodyStyle.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
                       ),
                     )
                   : GridView.builder(
@@ -124,6 +121,7 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
                         return GestureDetector(
                           onTap: () => _toggleSelection(index),
                           child: Card(
+                            color: theme.colorScheme.surface,
                             elevation: 3,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -140,9 +138,7 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
                                   Align(
                                     alignment: Alignment.topRight,
                                     child: Icon(
-                                      outfit.isSelected
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
+                                      outfit.isSelected ? Icons.favorite : Icons.favorite_border,
                                       color: Colors.red,
                                     ),
                                   ),
@@ -156,25 +152,26 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
                                   const Spacer(),
                                   Text(
                                     outfit.description,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 15,
-                                      color: Colors.black54,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                                     ),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     outfit.title,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 19,
                                       fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-                                  const Text(
+                                  Text(
                                     'Saved',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Colors.grey,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.4),
                                     ),
                                   ),
                                 ],
@@ -193,6 +190,8 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
                     onPressed: _deleteSelected,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: theme.colorScheme.onSurface),
+                      foregroundColor: theme.colorScheme.onSurface,
                     ),
                     child: const Text('Delete Selected'),
                   ),
@@ -202,8 +201,8 @@ class _SavedOutfitsScreenState extends State<SavedOutfitsScreen> {
                   child: ElevatedButton(
                     onPressed: _reuseOutfits,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
+                      backgroundColor: isDark ? Colors.white : Colors.black,
+                      foregroundColor: isDark ? Colors.black : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text('Reuse Outfits'),

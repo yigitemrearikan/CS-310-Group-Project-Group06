@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../utils/app_styles.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -42,38 +43,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
-        'name': name,
-        'email': email,
-        'stylePreference': '',
-        'temperatureSensitivity': '',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      if (userCredential.user != null) {
+        final db = FirebaseDatabase.instanceFor(
+          app: Firebase.app(),
+          databaseURL: 'https://weartoweather-default-rtdb.europe-west1.firebasedatabase.app/'
+        );
 
-      if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        await db.ref("users/${userCredential.user!.uid}").set({
+          'name': name,
+          'email': email,
+          'stylePreference': 'Casual',
+          'temperatureSensitivity': 'Moderate',
+          'createdAt': ServerValue.timestamp,
+        });
+
+        if (mounted) setState(() => _isLoading = false);
       }
     } on FirebaseAuthException catch (e) {
+      if (mounted) setState(() => _isLoading = false);
       String errorMessage = 'An error occurred. Please try again.';
       if (e.code == 'weak-password') {
         errorMessage = 'The password provided is too weak.';
       } else if (e.code == 'email-already-in-use') {
         errorMessage = 'The account already exists for that email.';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = 'The email address is not valid.';
       }
       _showError(errorMessage);
     } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
       _showError(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
