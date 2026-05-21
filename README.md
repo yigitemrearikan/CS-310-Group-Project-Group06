@@ -17,7 +17,9 @@ In the modern Age of Technology, users should not have to struggle with the dail
 ---
 
 ##  Team (Group 6)  
-* Yiğit Emre Arıkan (ID: 34011) – *Project Coordinator* * Kerem Kaya (ID: 33917) – *Testing & Quality Assurance Lead* * Barkın Uzunel (ID: 34039) – *Documentation & Submission Lead* ---
+* Yiğit Emre Arıkan (ID: 34011) – *Project Coordinator*
+* * Kerem Kaya (ID: 33917) – *Testing & Quality Assurance Lead*
+* * Barkın Uzunel (ID: 34039) – *Documentation & Submission Lead* ---
 
 ##  Tech Stack & Architecture  
 * **Framework**: Flutter (Channel stable)  
